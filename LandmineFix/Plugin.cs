@@ -4,6 +4,7 @@ using GameNetcodeStuff;
 using HarmonyLib;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Reflection.Emit;
 
 namespace LandmineFix
@@ -24,42 +25,10 @@ namespace LandmineFix
     [HarmonyPatch(typeof(PlayerControllerB), "Update")]
     public class FixTeleportedValue
     {
-        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+        static void PostFix(ref PlayerControllerB playerControllerB)
         {
-            Plugin.log.LogWarning("Beginning transpilation of GameNetworkManager.ResetSavedGameValues()");
-            var codes = new List<CodeInstruction>(instructions);
-
-            var sign1 = typeof(PlayerControllerB).GetField("teleportedLastFrame");
-            var sign2 = typeof(PlayerControllerB).GetField("jetpackControls");
-            bool success = false;
-
-            for (int i = 0; i < codes.Count - 7; i++)
-            {
-                /* 
-                 * removes "if (this.jetpackControls || this.disablingJetpackControls)"
-                 * that blocks teleportedThisFrame from resetting properly
-                 */
-                if (codes[i].StoresField(sign1) && codes[i+2].LoadsField(sign2))
-                {
-                    List<Label> labels = codes[i + 1].labels;
-                    codes[i+1] = new CodeInstruction(OpCodes.Nop);
-                    codes[i+1].labels = labels;
-                    codes.RemoveRange(i + 2, 5);
-                    success = true;
-                    break;
-                }
-            }
-
-            if (success)
-            {
-                Plugin.log.LogInfo("Successfully patched PlayerControllerB.Update");
-            }
-            else
-            {
-                Plugin.log.LogError("Failed to patch PlayerControllerB.Update");
-            }
-
-            return codes.AsEnumerable();
+            typeof(PlayerControllerB).GetField("teleportingThisFrame", BindingFlags.NonPublic | BindingFlags.Instance)
+                .SetValue(playerControllerB, false);
         }
     }
 }
