@@ -9,7 +9,7 @@ using System.Reflection.Emit;
 
 namespace LandmineFix
 {
-    [BepInPlugin("beeisyou.LandmineFix", "Landmine Fix", "1.0.0")]
+    [BepInPlugin("beeisyou.LandmineFix", "Landmine Fix", "1.0.1")]
     public class Plugin : BaseUnityPlugin
     {
         public static ManualLogSource log = new ManualLogSource("Landmine Fix");
